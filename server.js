@@ -1,19 +1,22 @@
 const express = require("express");
+const cors = require("cors");
 require("dotenv").config();
 
-const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-
 const app = express();
-const cors = require("cors");
 
 app.use(
 	cors({
 		origin: "*",
+		methods: ["GET", "POST", "PUT", "DELETE"],
+		allowedHeaders: ["Content-Type", "Authorization"],
 	})
 );
+
 app.use(express.json());
+
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 app.get("/api/apres-ski/st-anton", async (req, res) => {
 	try {
