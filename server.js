@@ -1,7 +1,10 @@
+console.log("BOOT: starting server...");
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
 const port = process.env.PORT || 3000;
+app.listen(port, () => console.log("Listening on", port));
+
 app.get("/", (req, res) => {
 	res.send("Hello World!");
 });
@@ -16,7 +19,7 @@ app.post("/login", (req, res) => {
 
 	res.send("Login endpoint");
 });
-
+console.log("BOOT: about to listen on", process.env.PORT);
 // Start the API
 app.listen(port, () => {
 	console.log(`API server running at http://localhost:${port}`);
