@@ -4,9 +4,23 @@ require("dotenv").config();
 
 const app = express();
 
+const allowedOrigins = [
+	"http://127.0.0.1:5500",
+	"http://localhost:5500",
+	"http://127.0.0.1:3000",
+	"http://localhost:3000",
+	// add your GitHub Pages URL when you have it:
+	// "https://<yourusername>.github.io",
+	// "https://<yourusername>.github.io/<repo-name>"
+];
+
 app.use(
 	cors({
-		origin: "*",
+		origin: function (origin, cb) {
+			if (!origin) return cb(null, true); // Postman / curl
+			if (allowedOrigins.includes(origin)) return cb(null, true);
+			return cb(new Error("Not allowed by CORS: " + origin));
+		},
 		methods: ["GET", "POST", "PUT", "DELETE"],
 		allowedHeaders: ["Content-Type", "Authorization"],
 	})
@@ -83,12 +97,16 @@ if (!JWT_SECRET) {
 //mongodb
 mongoose
 	.connect(MONGO_URI)
-	.then(() => console.log("Connected to MongoDB"))
+	.then(() => {
+		console.log("Connected to MongoDB");
+		app.listen(PORT, () => {
+			console.log(`Server running on port ${PORT}`);
+		});
+	})
 	.catch((err) => {
 		console.error("Mongo connection error:", err.message);
 		process.exit(1);
 	});
-
 const userSchema = new mongoose.Schema(
 	{
 		email: {
