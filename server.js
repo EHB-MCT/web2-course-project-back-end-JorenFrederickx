@@ -3,6 +3,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const User = require("./models/User");
 
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
@@ -29,8 +30,6 @@ app.use(
 	})
 );
 
-app.options("*", cors());
-
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
@@ -45,24 +44,6 @@ if (!JWT_SECRET) {
 	console.error("Missing JWT_SECRET in .env");
 	process.exit(1);
 }
-
-const userSchema = new mongoose.Schema(
-	{
-		email: {
-			type: String,
-			required: true,
-			unique: true,
-			lowercase: true,
-			trim: true,
-		},
-		passwordHash: { type: String, required: true },
-		name: { type: String, default: "" },
-		profilePictureUrl: { type: String, default: "" },
-	},
-	{ timestamps: true }
-);
-
-const User = mongoose.model("User", userSchema);
 
 app.get("/", (req, res) => {
 	res.json({ ok: true, message: "API is running" });
