@@ -154,6 +154,7 @@ app.delete("/me", auth, async (req, res) => {
 	}
 });
 
+//register
 app.post("/auth/register", async (req, res) => {
 	try {
 		const { email, password, name, profilePictureUrl } = req.body;
@@ -189,6 +190,7 @@ app.post("/auth/register", async (req, res) => {
 	}
 });
 
+//login
 app.post("/auth/login", async (req, res) => {
 	try {
 		const { email, password } = req.body;
@@ -220,6 +222,16 @@ app.post("/auth/login", async (req, res) => {
 const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
 
 const stAntonCache = { ts: 0, payload: null };
+const ischglCache = { ts: 0, payload: null };
+const saalbachCache = { ts: 0, payload: null };
+
+const zermattCache = { ts: 0, payload: null };
+const verbierCache = { ts: 0, payload: null };
+const stMoritzCache = { ts: 0, payload: null };
+
+const valThorensCache = { ts: 0, payload: null };
+const chamonixCache = { ts: 0, payload: null };
+const courchevelCache = { ts: 0, payload: null };
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 async function overpassRequest(query) {
@@ -251,7 +263,8 @@ async function overpassRequest(query) {
 		}
 	}
 }
-
+//all ski resort eindpoints individually (because the api crashed if I do them all at once)
+//austrian
 app.get("/api/apres-ski/st-anton", async (req, res) => {
 	try {
 		// serve cache if fresh
@@ -301,6 +314,331 @@ out center tags;
 	}
 });
 
+app.get("/api/apres-ski/ischgl", async (req, res) => {
+	try {
+		if (ischglCache.payload && Date.now() - ischglCache.ts < CACHE_TTL_MS) {
+			return res.json(ischglCache.payload);
+		}
+
+		const query = `
+[out:json][timeout:25];
+(
+  node["amenity"="bar"](around:2200,47.0127,10.2919);
+  node["amenity"="pub"](around:2200,47.0127,10.2919);
+  node["amenity"="nightclub"](around:2200,47.0127,10.2919);
+  way["amenity"="bar"](around:2200,47.0127,10.2919);
+  way["amenity"="pub"](around:2200,47.0127,10.2919);
+  way["amenity"="nightclub"](around:2200,47.0127,10.2919);
+);
+out center tags;
+`;
+
+		const data = await overpassRequest(query);
+
+		const places = (data.elements || []).map((el) => ({
+			id: el.id,
+			type: el.tags?.amenity || "unknown",
+			name: el.tags?.name || "(no name)",
+			lat: el.lat ?? el.center?.lat ?? null,
+			lon: el.lon ?? el.center?.lon ?? null,
+			website: el.tags?.website || el.tags?.contact_website || null,
+		}));
+
+		const payload = { count: places.length, places };
+		ischglCache.ts = Date.now();
+		ischglCache.payload = payload;
+
+		res.json(payload);
+	} catch (err) {
+		res.status(500).json({ error: "Overpass failed", details: err.message });
+	}
+});
+
+app.get("/api/apres-ski/saalbach", async (req, res) => {
+	try {
+		if (saalbachCache.payload && Date.now() - saalbachCache.ts < CACHE_TTL_MS) {
+			return res.json(saalbachCache.payload);
+		}
+
+		const query = `
+[out:json][timeout:25];
+(
+  node["amenity"="bar"](around:2200,47.3916,12.6389);
+  node["amenity"="pub"](around:2200,47.3916,12.6389);
+  node["amenity"="nightclub"](around:2200,47.3916,12.6389);
+  way["amenity"="bar"](around:2200,47.3916,12.6389);
+  way["amenity"="pub"](around:2200,47.3916,12.6389);
+  way["amenity"="nightclub"](around:2200,47.3916,12.6389);
+);
+out center tags;
+`;
+
+		const data = await overpassRequest(query);
+
+		const places = (data.elements || []).map((el) => ({
+			id: el.id,
+			type: el.tags?.amenity || "unknown",
+			name: el.tags?.name || "(no name)",
+			lat: el.lat ?? el.center?.lat ?? null,
+			lon: el.lon ?? el.center?.lon ?? null,
+			website: el.tags?.website || el.tags?.contact_website || null,
+		}));
+
+		const payload = { count: places.length, places };
+		saalbachCache.ts = Date.now();
+		saalbachCache.payload = payload;
+
+		res.json(payload);
+	} catch (err) {
+		res.status(500).json({ error: "Overpass failed", details: err.message });
+	}
+});
+
+//swiss
+app.get("/api/apres-ski/zermatt", async (req, res) => {
+	try {
+		if (zermattCache.payload && Date.now() - zermattCache.ts < CACHE_TTL_MS) {
+			return res.json(zermattCache.payload);
+		}
+
+		const query = `
+[out:json][timeout:25];
+(
+  node["amenity"="bar"](around:2200,46.0207,7.7491);
+  node["amenity"="pub"](around:2200,46.0207,7.7491);
+  node["amenity"="nightclub"](around:2200,46.0207,7.7491);
+);
+out center tags;
+`;
+
+		const data = await overpassRequest(query);
+		const places = (data.elements || []).map((el) => ({
+			id: el.id,
+			type: el.tags?.amenity || "unknown",
+			name: el.tags?.name || "(no name)",
+			lat: el.lat ?? el.center?.lat ?? null,
+			lon: el.lon ?? el.center?.lon ?? null,
+			website: el.tags?.website || el.tags?.contact_website || null,
+		}));
+
+		const payload = { count: places.length, places };
+		zermattCache.ts = Date.now();
+		zermattCache.payload = payload;
+
+		res.json(payload);
+	} catch (err) {
+		res.status(500).json({ error: "Overpass failed", details: err.message });
+	}
+});
+
+app.get("/api/apres-ski/verbier", async (req, res) => {
+	try {
+		if (verbierCache.payload && Date.now() - verbierCache.ts < CACHE_TTL_MS) {
+			return res.json(verbierCache.payload);
+		}
+
+		const query = `
+[out:json][timeout:25];
+(
+  node["amenity"="bar"](around:2200,46.0961,7.2267);
+  node["amenity"="pub"](around:2200,46.0961,7.2267);
+  node["amenity"="nightclub"](around:2200,46.0961,7.2267);
+  way["amenity"="bar"](around:2200,46.0961,7.2267);
+  way["amenity"="pub"](around:2200,46.0961,7.2267);
+  way["amenity"="nightclub"](around:2200,46.0961,7.2267);
+);
+out center tags;
+`;
+
+		const data = await overpassRequest(query);
+
+		const places = (data.elements || []).map((el) => ({
+			id: el.id,
+			type: el.tags?.amenity || "unknown",
+			name: el.tags?.name || "(no name)",
+			lat: el.lat ?? el.center?.lat ?? null,
+			lon: el.lon ?? el.center?.lon ?? null,
+			website: el.tags?.website || el.tags?.contact_website || null,
+		}));
+
+		const payload = { count: places.length, places };
+		verbierCache.ts = Date.now();
+		verbierCache.payload = payload;
+
+		res.json(payload);
+	} catch (err) {
+		res.status(500).json({ error: "Overpass failed", details: err.message });
+	}
+});
+
+app.get("/api/apres-ski/st-moritz", async (req, res) => {
+	try {
+		if (stMoritzCache.payload && Date.now() - stMoritzCache.ts < CACHE_TTL_MS) {
+			return res.json(stMoritzCache.payload);
+		}
+
+		const query = `
+[out:json][timeout:25];
+(
+  node["amenity"="bar"](around:2200,46.4983,9.8390);
+  node["amenity"="pub"](around:2200,46.4983,9.8390);
+  node["amenity"="nightclub"](around:2200,46.4983,9.8390);
+  way["amenity"="bar"](around:2200,46.4983,9.8390);
+  way["amenity"="pub"](around:2200,46.4983,9.8390);
+  way["amenity"="nightclub"](around:2200,46.4983,9.8390);
+);
+out center tags;
+`;
+
+		const data = await overpassRequest(query);
+
+		const places = (data.elements || []).map((el) => ({
+			id: el.id,
+			type: el.tags?.amenity || "unknown",
+			name: el.tags?.name || "(no name)",
+			lat: el.lat ?? el.center?.lat ?? null,
+			lon: el.lon ?? el.center?.lon ?? null,
+			website: el.tags?.website || el.tags?.contact_website || null,
+		}));
+
+		const payload = { count: places.length, places };
+		stMoritzCache.ts = Date.now();
+		stMoritzCache.payload = payload;
+
+		res.json(payload);
+	} catch (err) {
+		res.status(500).json({ error: "Overpass failed", details: err.message });
+	}
+});
+
+//french
+app.get("/api/apres-ski/val-thorens", async (req, res) => {
+	try {
+		if (
+			valThorensCache.payload &&
+			Date.now() - valThorensCache.ts < CACHE_TTL_MS
+		) {
+			return res.json(valThorensCache.payload);
+		}
+
+		const query = `
+[out:json][timeout:25];
+(
+  node["amenity"="bar"](around:2200,45.2977,6.5803);
+  node["amenity"="pub"](around:2200,45.2977,6.5803);
+  node["amenity"="nightclub"](around:2200,45.2977,6.5803);
+  way["amenity"="bar"](around:2200,45.2977,6.5803);
+  way["amenity"="pub"](around:2200,45.2977,6.5803);
+  way["amenity"="nightclub"](around:2200,45.2977,6.5803);
+);
+out center tags;
+`;
+
+		const data = await overpassRequest(query);
+
+		const places = (data.elements || []).map((el) => ({
+			id: el.id,
+			type: el.tags?.amenity || "unknown",
+			name: el.tags?.name || "(no name)",
+			lat: el.lat ?? el.center?.lat ?? null,
+			lon: el.lon ?? el.center?.lon ?? null,
+			website: el.tags?.website || el.tags?.contact_website || null,
+		}));
+
+		const payload = { count: places.length, places };
+		valThorensCache.ts = Date.now();
+		valThorensCache.payload = payload;
+
+		res.json(payload);
+	} catch (err) {
+		res.status(500).json({ error: "Overpass failed", details: err.message });
+	}
+});
+
+app.get("/api/apres-ski/chamonix", async (req, res) => {
+	try {
+		if (chamonixCache.payload && Date.now() - chamonixCache.ts < CACHE_TTL_MS) {
+			return res.json(chamonixCache.payload);
+		}
+
+		const query = `
+[out:json][timeout:25];
+(
+  node["amenity"="bar"](around:2200,45.9237,6.8694);
+  node["amenity"="pub"](around:2200,45.9237,6.8694);
+  node["amenity"="nightclub"](around:2200,45.9237,6.8694);
+  way["amenity"="bar"](around:2200,45.9237,6.8694);
+  way["amenity"="pub"](around:2200,45.9237,6.8694);
+  way["amenity"="nightclub"](around:2200,45.9237,6.8694);
+);
+out center tags;
+`;
+
+		const data = await overpassRequest(query);
+
+		const places = (data.elements || []).map((el) => ({
+			id: el.id,
+			type: el.tags?.amenity || "unknown",
+			name: el.tags?.name || "(no name)",
+			lat: el.lat ?? el.center?.lat ?? null,
+			lon: el.lon ?? el.center?.lon ?? null,
+			website: el.tags?.website || el.tags?.contact_website || null,
+		}));
+
+		const payload = { count: places.length, places };
+		chamonixCache.ts = Date.now();
+		chamonixCache.payload = payload;
+
+		res.json(payload);
+	} catch (err) {
+		res.status(500).json({ error: "Overpass failed", details: err.message });
+	}
+});
+
+app.get("/api/apres-ski/courchevel", async (req, res) => {
+	try {
+		if (
+			courchevelCache.payload &&
+			Date.now() - courchevelCache.ts < CACHE_TTL_MS
+		) {
+			return res.json(courchevelCache.payload);
+		}
+
+		const query = `
+[out:json][timeout:25];
+(
+  node["amenity"="bar"](around:2200,45.4146,6.6345);
+  node["amenity"="pub"](around:2200,45.4146,6.6345);
+  node["amenity"="nightclub"](around:2200,45.4146,6.6345);
+  way["amenity"="bar"](around:2200,45.4146,6.6345);
+  way["amenity"="pub"](around:2200,45.4146,6.6345);
+  way["amenity"="nightclub"](around:2200,45.4146,6.6345);
+);
+out center tags;
+`;
+
+		const data = await overpassRequest(query);
+
+		const places = (data.elements || []).map((el) => ({
+			id: el.id,
+			type: el.tags?.amenity || "unknown",
+			name: el.tags?.name || "(no name)",
+			lat: el.lat ?? el.center?.lat ?? null,
+			lon: el.lon ?? el.center?.lon ?? null,
+			website: el.tags?.website || el.tags?.contact_website || null,
+		}));
+
+		const payload = { count: places.length, places };
+		courchevelCache.ts = Date.now();
+		courchevelCache.payload = payload;
+
+		res.json(payload);
+	} catch (err) {
+		res.status(500).json({ error: "Overpass failed", details: err.message });
+	}
+});
+
+//start server and connect to mongodb
 mongoose
 	.connect(MONGO_URI)
 	.then(() => {
