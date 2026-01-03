@@ -16,6 +16,8 @@ const allowedOrigins = [
 	"http://localhost:5500",
 	"http://127.0.0.1:3000",
 	"http://localhost:3000",
+	"https://ideal-adventure-6lwww7m.pages.github.io/",
+	"https://github.com/EHB-MCT/web2-course-project-front-end-JorenFrederickx",
 ];
 
 app.use(
@@ -67,6 +69,89 @@ function auth(req, res, next) {
 
 app.get("/me", auth, (req, res) => {
 	res.json({ ok: true, user: req.user });
+});
+app.put("/me", auth, async (req, res) => {
+	try {
+		const userId = req.user.userId;
+
+		const { email, name, profilePictureUrl, password, currentPassword } =
+			req.body;
+
+		const updates = {};
+
+		if (email !== undefined) {
+			const normalizedEmail = String(email).toLowerCase().trim();
+			if (!normalizedEmail)
+				return res.status(400).json({ error: "email cannot be empty" });
+
+			const existing = await User.findOne({ email: normalizedEmail });
+			if (existing && existing._id.toString() !== userId) {
+				return res.status(409).json({ error: "email already exists" });
+			}
+
+			updates.email = normalizedEmail;
+		}
+
+		if (name !== undefined) updates.name = String(name).trim();
+		if (profilePictureUrl !== undefined)
+			updates.profilePictureUrl = String(profilePictureUrl).trim();
+
+		if (password !== undefined) {
+			const newPassword = String(password);
+			if (newPassword.length < 6) {
+				return res
+					.status(400)
+					.json({ error: "password must be at least 6 characters" });
+			}
+
+			const user = await User.findById(userId);
+			if (!user) return res.status(404).json({ error: "user not found" });
+
+			if (!currentPassword) {
+				return res
+					.status(400)
+					.json({ error: "currentPassword is required to change password" });
+			}
+
+			const ok = await bcrypt.compare(
+				String(currentPassword),
+				user.passwordHash
+			);
+			if (!ok)
+				return res.status(401).json({ error: "current password is incorrect" });
+
+			updates.passwordHash = await bcrypt.hash(newPassword, 10);
+		}
+
+		const updated = await User.findByIdAndUpdate(userId, updates, {
+			new: true,
+		});
+		if (!updated) return res.status(404).json({ error: "user not found" });
+
+		return res.json({
+			ok: true,
+			user: {
+				id: updated._id,
+				email: updated.email,
+				name: updated.name,
+				profilePictureUrl: updated.profilePictureUrl,
+			},
+		});
+	} catch (err) {
+		return res.status(500).json({ error: err.message });
+	}
+});
+
+app.delete("/me", auth, async (req, res) => {
+	try {
+		const userId = req.user.userId;
+		const deleted = await User.findByIdAndDelete(userId);
+		if (!deleted) return res.status(404).json({ error: "user not found" });
+
+		return res.json({ ok: true, message: "account deleted" });
+	} catch (err) {
+		return res.status(500).json({ error: err.message });
+	}
 });
 
 app.post("/auth/register", async (req, res) => {
