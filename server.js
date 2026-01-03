@@ -16,7 +16,7 @@ const allowedOrigins = [
 	"http://localhost:5500",
 	"http://127.0.0.1:3000",
 	"http://localhost:3000",
-	"https://ideal-adventure-6lwww7m.pages.github.io/",
+	"https://ideal-adventure-6lwww7m.pages.github.io",
 	"https://github.com/EHB-MCT/web2-course-project-front-end-JorenFrederickx",
 ];
 
