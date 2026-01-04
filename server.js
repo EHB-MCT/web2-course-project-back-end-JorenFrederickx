@@ -18,6 +18,7 @@ const allowedOrigins = [
 	"http://localhost:3000",
 	"https://ideal-adventure-6lwww7m.pages.github.io",
 	"https://github.com/EHB-MCT/web2-course-project-front-end-JorenFrederickx",
+	"https://ehb-mct.github.io/web2-course-project-front-end-JorenFrederickx",
 ];
 
 app.use(
